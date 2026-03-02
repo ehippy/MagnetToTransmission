@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    :root {
+      --bg: #1e1e2e;
+      --surface: #282840;
+      --border: #3b3b5c;
+      --text: #e0e0e0;
+      --muted: #a0a0b0;
+      --accent: #7c6ff7;
+      --accent-hover: #6b5ce0;
+      --success: #2ecc71;
+      --error: #e74c3c;
+      --warning: #f39c12;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      background: var(--bg);
+      width: 320px;
+      padding: 16px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .header img { width: 28px; height: 28px; }
+    .header h1 { font-size: 15px; font-weight: 600; }
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: var(--surface);
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot.ok { background: var(--success); }
+    .dot.err { background: var(--error); }
+    .dot.loading { background: var(--warning); }
+    .status-text { color: var(--muted); font-size: 12px; flex: 1; }
+    .status-row a {
+      color: var(--accent);
+      font-size: 11px;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+    .status-row a:hover { text-decoration: underline; }
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .input-row input {
+      flex: 1;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+    }
+    .input-row input:focus { border-color: var(--accent); }
+    .input-row button {
+      padding: 8px 14px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .input-row button:hover { background: var(--accent-hover); }
+    #add-status {
+      font-size: 12px;
+      min-height: 16px;
+      margin-bottom: 12px;
+    }
+    .success { color: var(--success); }
+    .error { color: var(--error); }
+    .footer {
+      text-align: center;
+    }
+    .footer a {
+      color: var(--muted);
+      font-size: 12px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .footer a:hover { color: var(--accent); text-decoration: underline; }
+    .section-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 6px;
+    }
+    .targets-list {
+      margin-bottom: 12px;
+    }
+    .target-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      background: var(--surface);
+      border-radius: 6px;
+      margin-bottom: 4px;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    .target-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+    .target-empty {
+      font-size: 12px;
+      color: var(--muted);
+      font-style: italic;
+      padding: 6px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="icons/icon48.png" alt="icon" />
+    <h1>Magnet to Transmission</h1>
+  </div>
+
+  <div class="status-row">
+    <span id="status-dot" class="dot loading"></span>
+    <span id="status-text" class="status-text">Checking connection…</span>
+    <a id="open-webui" href="#" style="display:none;">Open UI ↗</a>
+  </div>
+
+  <div class="input-row">
+    <input id="magnet" type="text" placeholder="Paste magnet link…" />
+    <button id="add-btn">Add</button>
+  </div>
+  <div id="add-status"></div>
+
+  <div class="section-label">Download Targets</div>
+  <div id="targets" class="targets-list"></div>
+
+  <div class="footer">
+    <a id="open-options">Settings</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
