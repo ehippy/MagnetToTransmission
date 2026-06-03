@@ -107,9 +107,15 @@ chrome.contextMenus.onClicked.addListener(async (info) => {
   const id = info.menuItemId;
   if (id !== "send-magnet-default" && !id.startsWith(MENU_PREFIX)) return;
 
-  const magnetUrl = info.linkUrl;
-  if (!magnetUrl || !magnetUrl.startsWith("magnet:")) {
-    notify("Error", "Not a valid magnet link.");
+  const linkUrl = info.linkUrl;
+  if (!linkUrl) {
+    notify("Error", "No link URL found.");
+    return;
+  }
+
+  // Validate: must be a magnet link or a .torrent file URL
+  if (!linkUrl.startsWith("magnet:") && !linkUrl.endsWith(".torrent")) {
+    notify("Error", "Not a valid magnet link or .torrent file.");
     return;
   }
 
@@ -121,7 +127,7 @@ chrome.contextMenus.onClicked.addListener(async (info) => {
     downloadDir = downloadDirs[idx] || null;
   }
 
-  const rpcArgs = { filename: magnetUrl };
+  const rpcArgs = { filename: linkUrl };
   if (downloadDir) rpcArgs["download-dir"] = downloadDir;
 
   try {
@@ -134,9 +140,12 @@ chrome.contextMenus.onClicked.addListener(async (info) => {
       const name = added ? added.name : "torrent";
       const isDuplicate = !!result.arguments["torrent-duplicate"];
       const dest = downloadDir ? ` → ${downloadDir}` : "";
+      const source = linkUrl.startsWith("magnet:") ? "magnet link" : ".torrent file";
       notify(
         isDuplicate ? "Duplicate" : "Added",
-        isDuplicate ? `"${name}" already exists.` : `"${name}" sent to Transmission${dest}.`
+        isDuplicate
+          ? `"${name}" already exists.`
+          : `"${name}" (${source}) sent to Transmission${dest}.`
       );
     } else {
       notify("Error", `Transmission: ${result.result}`);

@@ -1,13 +1,14 @@
 # Magnet to Transmission
 
-A Chrome extension that lets you right-click magnet links and send them directly to your Transmission server.
+A Chrome extension that lets you right-click magnet links or `.torrent` file URLs and send them directly to your Transmission server.
 
 ## Features
 
-- **Right-click context menu** on any magnet link → sends it to Transmission
+- **Right-click context menu** on any magnet link or `.torrent` file URL → sends it to Transmission
 - **Popup** shows connection status, active/paused torrent counts, and a quick-add input
 - **Configurable** server URL, RPC path, and authentication credentials
 - **Test connection** button in settings to verify your setup
+- **Download directory selection** via right-click submenu
 
 ## Installation
 
@@ -29,7 +30,7 @@ Open the extension options (right-click icon → Options, or click Settings in t
 
 ## Usage
 
-- **Right-click** any magnet link on a page → **Send magnet to Transmission**
+- **Right-click** any magnet link or `.torrent` file URL on a page → **Send to Transmission** → choose default or configured directory
 - Or click the extension icon and **paste a magnet link** into the input field
 
 ## Transmission Setup
