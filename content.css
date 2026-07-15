@@ -1,0 +1,40 @@
+.m2t-send-icon {
+  all: unset;
+  position: fixed !important;
+  width: 18px !important;
+  height: 18px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  max-width: none !important;
+  cursor: pointer !important;
+  opacity: 0.85 !important;
+  z-index: 2147483647 !important;
+  transition: opacity 0.15s ease, transform 0.15s ease !important;
+}
+
+.m2t-send-icon:hover {
+  opacity: 1 !important;
+  transform: scale(1.15) !important;
+}
+
+.m2t-send-icon.m2t-sending {
+  animation: m2t-pulse 0.8s ease-in-out infinite !important;
+}
+
+.m2t-send-icon.m2t-success {
+  transform: scale(1.25) !important;
+}
+
+.m2t-send-icon.m2t-error {
+  opacity: 0.4 !important;
+}
+
+@keyframes m2t-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}

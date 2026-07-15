@@ -65,11 +65,12 @@ async function buildContextMenus() {
     contexts: ["link"],
   });
 
-  // Default (no specific directory)
+  // Default (configured default destination, or Transmission's own default if unset)
+  const { defaultDownloadDir = "" } = await chrome.storage.sync.get({ defaultDownloadDir: "" });
   chrome.contextMenus.create({
     id: "send-magnet-default",
     parentId: "send-magnet-parent",
-    title: "Default directory",
+    title: defaultDownloadDir ? `Default (${defaultDownloadDir})` : "Default directory",
     contexts: ["link"],
   });
 
@@ -96,29 +97,20 @@ async function buildContextMenus() {
 chrome.runtime.onInstalled.addListener(() => buildContextMenus());
 chrome.runtime.onStartup.addListener(() => buildContextMenus());
 
-// Rebuild menus when storage changes (dirs added/removed)
+// Rebuild menus when storage changes (dirs added/removed, default changed)
 chrome.storage.onChanged.addListener((changes) => {
-  if (changes.downloadDirs) buildContextMenus();
+  if (changes.downloadDirs || changes.defaultDownloadDir) buildContextMenus();
 });
 
-// ── Handle context menu click ──
+// ── Shared "add magnet" logic ──
 
-chrome.contextMenus.onClicked.addListener(async (info) => {
-  const id = info.menuItemId;
-  if (id !== "send-magnet-default" && !id.startsWith(MENU_PREFIX)) return;
-
-  const magnetUrl = info.linkUrl;
+/**
+ * Sends a magnet link to Transmission and returns a plain result object.
+ * Used by both the context menu handler and the inline page-icon handler.
+ */
+async function sendMagnet(magnetUrl, downloadDir = null) {
   if (!magnetUrl || !magnetUrl.startsWith("magnet:")) {
-    notify("Error", "Not a valid magnet link.");
-    return;
-  }
-
-  // Determine download directory
-  let downloadDir = null;
-  if (id.startsWith(MENU_PREFIX)) {
-    const idx = parseInt(id.slice(MENU_PREFIX.length), 10);
-    const { downloadDirs = [] } = await chrome.storage.sync.get({ downloadDirs: [] });
-    downloadDir = downloadDirs[idx] || null;
+    return { ok: false, error: "Not a valid magnet link." };
   }
 
   const rpcArgs = { filename: magnetUrl };
@@ -133,17 +125,72 @@ chrome.contextMenus.onClicked.addListener(async (info) => {
         result.arguments["torrent-duplicate"];
       const name = added ? added.name : "torrent";
       const isDuplicate = !!result.arguments["torrent-duplicate"];
-      const dest = downloadDir ? ` → ${downloadDir}` : "";
+      return { ok: true, name, duplicate: isDuplicate, downloadDir };
+    }
+    return { ok: false, error: `Transmission: ${result.result}` };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+// ── Handle context menu click ──
+
+chrome.contextMenus.onClicked.addListener(async (info) => {
+  const id = info.menuItemId;
+  if (id !== "send-magnet-default" && !id.startsWith(MENU_PREFIX)) return;
+
+  const magnetUrl = info.linkUrl;
+
+  // Determine download directory
+  let downloadDir = null;
+  if (id.startsWith(MENU_PREFIX)) {
+    const idx = parseInt(id.slice(MENU_PREFIX.length), 10);
+    const { downloadDirs = [] } = await chrome.storage.sync.get({ downloadDirs: [] });
+    downloadDir = downloadDirs[idx] || null;
+  } else {
+    const { defaultDownloadDir = "" } = await chrome.storage.sync.get({ defaultDownloadDir: "" });
+    downloadDir = defaultDownloadDir || null;
+  }
+
+  const result = await sendMagnet(magnetUrl, downloadDir);
+
+  if (result.ok) {
+    const dest = result.downloadDir ? ` → ${result.downloadDir}` : "";
+    notify(
+      result.duplicate ? "Duplicate" : "Added",
+      result.duplicate
+        ? `"${result.name}" already exists.`
+        : `"${result.name}" sent to Transmission${dest}.`
+    );
+  } else {
+    notify("Error", result.error);
+  }
+});
+
+// ── Handle clicks on the inline page overlay icon ──
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message?.type !== "m2t-send-magnet") return false;
+
+  (async () => {
+    const { defaultDownloadDir = "" } = await chrome.storage.sync.get({ defaultDownloadDir: "" });
+    const result = await sendMagnet(message.magnetUrl, defaultDownloadDir || null);
+
+    if (result.ok) {
+      const dest = result.downloadDir ? ` → ${result.downloadDir}` : "";
       notify(
-        isDuplicate ? "Duplicate" : "Added",
-        isDuplicate ? `"${name}" already exists.` : `"${name}" sent to Transmission${dest}.`
+        result.duplicate ? "Duplicate" : "Added",
+        result.duplicate
+          ? `"${result.name}" already exists.`
+          : `"${result.name}" sent to Transmission${dest}.`
       );
     } else {
-      notify("Error", `Transmission: ${result.result}`);
+      notify("Error", result.error);
     }
-  } catch (err) {
-    notify("Error", err.message);
-  }
+    sendResponse(result);
+  })();
+
+  return true; // keep the message channel open for the async response
 });
 
 // ── Badge / notification helper ──

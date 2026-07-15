@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Magnet to Transmission",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Right-click magnet links to send them to your Transmission server.",
   "permissions": [
     "contextMenus",
@@ -15,6 +15,20 @@
   "background": {
     "service_worker": "background.js"
   },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/icon48.png"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {

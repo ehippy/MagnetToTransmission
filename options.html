@@ -104,6 +104,38 @@
       line-height: 1;
     }
     .dir-item button:hover { opacity: 0.7; }
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .checkbox-row input { width: auto; margin: 0; }
+    .checkbox-row label {
+      text-transform: none;
+      letter-spacing: normal;
+      font-size: 13px;
+      color: var(--text);
+      margin: 0;
+    }
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--text);
+      font-size: 14px;
+      margin-bottom: 8px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    select:focus { border-color: var(--accent); }
   </style>
 </head>
 <body>
@@ -135,6 +167,17 @@
     <button id="add-dir" style="background: var(--accent); color: #fff; flex-shrink: 0;">Add</button>
   </div>
   <ul id="dir-list" style="list-style: none; padding: 0; margin: 0;"></ul>
+
+  <h2 style="margin-top: 28px;">Default Destination</h2>
+  <p class="hint">Used by the one-click page icon and the right-click menu's "Default directory" entry.</p>
+  <select id="default-dir"></select>
+
+  <h2 style="margin-top: 28px;">Inline Page Icons</h2>
+  <div class="checkbox-row">
+    <input id="show-inline-icons" type="checkbox" />
+    <label for="show-inline-icons">Show a one-click "send" icon over magnet links on web pages</label>
+  </div>
+  <p class="hint">Adds a small badge next to magnet links so you can send them without right-clicking. Sends to the default destination configured above.</p>
 
   <script src="options.js"></script>
 </body>

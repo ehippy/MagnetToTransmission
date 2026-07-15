@@ -88,6 +88,7 @@ function showStatus(msg, type) {
 
 const $dirList = document.getElementById("dir-list");
 const $newDir = document.getElementById("new-dir");
+const $defaultDir = document.getElementById("default-dir");
 
 function renderDirs(dirs) {
   $dirList.innerHTML = "";
@@ -99,20 +100,32 @@ function renderDirs(dirs) {
   });
 }
 
+function renderDefaultDirOptions(dirs, selected) {
+  const options = ['<option value="">Transmission default (no directory set)</option>'].concat(
+    dirs.map((d) => `<option value="${escHtml(d)}">${escHtml(d)}</option>`)
+  );
+  $defaultDir.innerHTML = options.join("");
+  $defaultDir.value = dirs.includes(selected) ? selected : "";
+}
+
 function escHtml(s) {
   return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
-chrome.storage.sync.get({ downloadDirs: [] }, (s) => renderDirs(s.downloadDirs));
+chrome.storage.sync.get({ downloadDirs: [], defaultDownloadDir: "" }, (s) => {
+  renderDirs(s.downloadDirs);
+  renderDefaultDirOptions(s.downloadDirs, s.defaultDownloadDir);
+});
 
 document.getElementById("add-dir").addEventListener("click", () => {
   const val = $newDir.value.trim();
   if (!val) return;
-  chrome.storage.sync.get({ downloadDirs: [] }, (s) => {
+  chrome.storage.sync.get({ downloadDirs: [], defaultDownloadDir: "" }, (s) => {
     const dirs = s.downloadDirs;
     if (!dirs.includes(val)) dirs.push(val);
     chrome.storage.sync.set({ downloadDirs: dirs }, () => {
       renderDirs(dirs);
+      renderDefaultDirOptions(dirs, s.defaultDownloadDir);
       $newDir.value = "";
       showStatus("Directory added. Reload extension for menu update.", "success");
     });
@@ -124,12 +137,32 @@ $newDir.addEventListener("keydown", (e) => { if (e.key === "Enter") document.get
 $dirList.addEventListener("click", (e) => {
   if (e.target.tagName !== "BUTTON") return;
   const idx = parseInt(e.target.dataset.idx, 10);
-  chrome.storage.sync.get({ downloadDirs: [] }, (s) => {
+  chrome.storage.sync.get({ downloadDirs: [], defaultDownloadDir: "" }, (s) => {
     const dirs = s.downloadDirs;
-    dirs.splice(idx, 1);
-    chrome.storage.sync.set({ downloadDirs: dirs }, () => {
+    const [removed] = dirs.splice(idx, 1);
+    const defaultDownloadDir = removed === s.defaultDownloadDir ? "" : s.defaultDownloadDir;
+    chrome.storage.sync.set({ downloadDirs: dirs, defaultDownloadDir }, () => {
       renderDirs(dirs);
+      renderDefaultDirOptions(dirs, defaultDownloadDir);
       showStatus("Directory removed. Reload extension for menu update.", "success");
     });
   });
+});
+
+$defaultDir.addEventListener("change", () => {
+  chrome.storage.sync.set({ defaultDownloadDir: $defaultDir.value }, () => {
+    showStatus("Default destination saved.", "success");
+  });
+});
+
+// ── Inline page icon toggle ──
+
+const $showInlineIcons = document.getElementById("show-inline-icons");
+
+chrome.storage.sync.get({ showInlineIcons: true }, (s) => {
+  $showInlineIcons.checked = s.showInlineIcons;
+});
+
+$showInlineIcons.addEventListener("change", () => {
+  chrome.storage.sync.set({ showInlineIcons: $showInlineIcons.checked });
 });

@@ -101,13 +101,16 @@ $magnet.addEventListener("keydown", (e) => {
 
 const $targets = document.getElementById("targets");
 
-chrome.storage.sync.get({ downloadDirs: [] }, (s) => {
+chrome.storage.sync.get({ downloadDirs: [], defaultDownloadDir: "" }, (s) => {
   const dirs = s.downloadDirs;
   if (dirs.length === 0) {
     $targets.innerHTML = '<div class="target-empty">None configured – add in Settings</div>';
   } else {
     $targets.innerHTML = dirs
-      .map((d) => `<div class="target-item"><span class="target-dot"></span>${escHtml(d)}</div>`)
+      .map((d) => {
+        const isDefault = d === s.defaultDownloadDir;
+        return `<div class="target-item"><span class="target-dot"></span>${escHtml(d)}${isDefault ? '<span class="target-default"> · default</span>' : ""}</div>`;
+      })
       .join("");
   }
 });
